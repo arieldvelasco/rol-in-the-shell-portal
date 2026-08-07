@@ -1,0 +1,66 @@
+---
+// Filtro cliente por sistema. Busca los sistemas disponibles a partir del
+// contenido publicado (no hardcodeados) y filtra los <li data-sistema="...">
+// dentro del contenedor indicado por `listId`.
+
+interface Props {
+	sistemas: string[];
+	listId: string;
+}
+
+const { sistemas, listId } = Astro.props;
+---
+
+<div class="mb-8 flex flex-wrap gap-2" data-sistema-filter data-list-id={listId}>
+	<button
+		type="button"
+		data-sistema-option="todos"
+		aria-pressed="true"
+		class="rounded-full border border-indigo-500 bg-indigo-500 px-3 py-1 text-sm font-medium text-white"
+	>
+		Todos
+	</button>
+	{
+		sistemas.map((sistema) => (
+			<button
+				type="button"
+				data-sistema-option={sistema}
+				aria-pressed="false"
+				class="rounded-full border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:border-indigo-400 dark:border-slate-700 dark:text-slate-300 dark:hover:border-indigo-500"
+			>
+				{sistema}
+			</button>
+		))
+	}
+</div>
+
+<script>
+	const ACTIVE_CLASSES = ['bg-indigo-500', 'border-indigo-500', 'text-white'];
+	const INACTIVE_CLASSES = ['border-slate-300', 'dark:border-slate-700', 'text-slate-700', 'dark:text-slate-300'];
+
+	document.querySelectorAll<HTMLElement>('[data-sistema-filter]').forEach((filter) => {
+		const listId = filter.dataset.listId;
+		const list = listId ? document.getElementById(listId) : null;
+		if (!list) return;
+
+		const buttons = filter.querySelectorAll<HTMLButtonElement>('[data-sistema-option]');
+
+		buttons.forEach((button) => {
+			button.addEventListener('click', () => {
+				const selected = button.dataset.sistemaOption;
+
+				buttons.forEach((b) => {
+					const isSelected = b === button;
+					b.setAttribute('aria-pressed', String(isSelected));
+					ACTIVE_CLASSES.forEach((c) => b.classList.toggle(c, isSelected));
+					INACTIVE_CLASSES.forEach((c) => b.classList.toggle(c, !isSelected));
+				});
+
+				list.querySelectorAll<HTMLElement>('[data-sistema]').forEach((item) => {
+					const matches = selected === 'todos' || item.dataset.sistema === selected;
+					item.classList.toggle('hidden', !matches);
+				});
+			});
+		});
+	});
+</script>

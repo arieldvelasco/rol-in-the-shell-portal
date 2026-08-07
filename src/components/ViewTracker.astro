@@ -1,0 +1,35 @@
+---
+// No renderiza nada visible: registra una vista al montar la página.
+interface Props {
+	contentType: 'blog' | 'resena' | 'asset';
+	contentSlug: string;
+}
+
+const { contentType, contentSlug } = Astro.props;
+---
+
+<span
+	data-view-tracker
+	data-content-type={contentType}
+	data-content-slug={contentSlug}
+	class="hidden"
+></span>
+
+<script>
+	import { supabase } from '../lib/supabase';
+	import { getFingerprint } from '../lib/fingerprint';
+
+	document.querySelectorAll<HTMLElement>('[data-view-tracker]').forEach((el) => {
+		const contentType = el.dataset.contentType!;
+		const contentSlug = el.dataset.contentSlug!;
+
+		// Falla en silencio si ya hay una vista hoy para este fingerprint
+		// (viola el constraint único content_slug+fingerprint+view_date), es
+		// el comportamiento esperado, no un error a mostrar.
+		supabase.from('views').insert({
+			content_type: contentType,
+			content_slug: contentSlug,
+			fingerprint: getFingerprint(),
+		});
+	});
+</script>

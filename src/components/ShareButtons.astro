@@ -1,0 +1,90 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div data-share data-share-title={title} class="flex flex-wrap items-center gap-2">
+	<span class="text-sm text-slate-500 dark:text-slate-400">Compartir:</span>
+	<a
+		data-share-link="whatsapp"
+		target="_blank"
+		rel="noopener noreferrer"
+		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
+	>
+		WhatsApp
+	</a>
+	<a
+		data-share-link="x"
+		target="_blank"
+		rel="noopener noreferrer"
+		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
+	>
+		X
+	</a>
+	<a
+		data-share-link="facebook"
+		target="_blank"
+		rel="noopener noreferrer"
+		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
+	>
+		Facebook
+	</a>
+	<button
+		type="button"
+		data-share-copy
+		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
+	>
+		🔗 Copiar enlace
+	</button>
+</div>
+
+<script>
+	document.querySelectorAll<HTMLElement>('[data-share]').forEach((container) => {
+		const title = container.dataset.shareTitle ?? '';
+		const url = window.location.href;
+		const encodedUrl = encodeURIComponent(url);
+		const encodedTitle = encodeURIComponent(title);
+
+		const shareUrls: Record<string, string> = {
+			whatsapp: `https://wa.me/?text=${encodedTitle}%20${encodedUrl}`,
+			x: `https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`,
+			facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+		};
+
+		container.querySelectorAll<HTMLAnchorElement>('[data-share-link]').forEach((link) => {
+			const network = link.dataset.shareLink!;
+			link.href = shareUrls[network];
+		});
+
+		function copyFallback(text: string): boolean {
+			const input = document.createElement('textarea');
+			input.value = text;
+			input.style.position = 'fixed';
+			input.style.opacity = '0';
+			document.body.appendChild(input);
+			input.select();
+			const ok = document.execCommand('copy');
+			input.remove();
+			return ok;
+		}
+
+		const copyButton = container.querySelector<HTMLButtonElement>('[data-share-copy]')!;
+		const copyLabel = copyButton.textContent;
+		copyButton.addEventListener('click', async () => {
+			let copied = false;
+			try {
+				await navigator.clipboard.writeText(url);
+				copied = true;
+			} catch {
+				copied = copyFallback(url);
+			}
+			copyButton.textContent = copied ? '✓ ¡Copiado!' : 'No se pudo copiar';
+			setTimeout(() => {
+				copyButton.textContent = copyLabel;
+			}, 2000);
+		});
+	});
+</script>

@@ -1,0 +1,78 @@
+---
+import type { ContentEntry } from '../lib/latest-entries';
+
+interface Props {
+	entries: ContentEntry[];
+}
+
+const { entries } = Astro.props;
+---
+
+<aside data-top-liked class="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+	<h2 class="text-lg font-semibold">Más populares</h2>
+	<ul data-top-liked-list class="mt-4 space-y-3">
+		<li class="text-sm text-slate-500 dark:text-slate-400">Cargando...</li>
+	</ul>
+
+	<script type="application/json" data-top-liked-entries set:html={JSON.stringify(entries)} />
+</aside>
+
+<script>
+	import { supabase } from '../lib/supabase';
+
+	interface ContentEntry {
+		title: string;
+		href: string;
+		date: string;
+		kind: string;
+		contentType: 'blog' | 'resena' | 'asset';
+		contentSlug: string;
+	}
+
+	document.querySelectorAll<HTMLElement>('[data-top-liked]').forEach(async (aside) => {
+		const list = aside.querySelector<HTMLElement>('[data-top-liked-list]')!;
+		const entriesJson = aside.querySelector<HTMLScriptElement>('[data-top-liked-entries]')!.textContent;
+		const entries: ContentEntry[] = entriesJson ? JSON.parse(entriesJson) : [];
+
+		const { data: rows } = await supabase.from('content_stats').select('content_type, content_slug, like_count');
+
+		const likesByKey = new Map<string, number>();
+		for (const row of rows ?? []) {
+			likesByKey.set(`${row.content_type}:${row.content_slug}`, row.like_count as number);
+		}
+
+		const top = entries
+			.map((entry) => ({ entry, likes: likesByKey.get(`${entry.contentType}:${entry.contentSlug}`) ?? 0 }))
+			// Empate en likes (incluido 0-0) se desempata por más reciente.
+			.sort((a, b) => b.likes - a.likes || Date.parse(b.entry.date) - Date.parse(a.entry.date))
+			.slice(0, 3);
+
+		list.innerHTML = '';
+
+		if (top.length === 0) {
+			aside.classList.add('hidden');
+			return;
+		}
+
+		for (const { entry, likes } of top) {
+			const li = document.createElement('li');
+
+			const link = document.createElement('a');
+			link.href = entry.href;
+			link.className =
+				'flex items-center justify-between gap-3 rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800';
+
+			const title = document.createElement('span');
+			title.className = 'font-medium text-sm';
+			title.textContent = entry.title;
+
+			const likeCount = document.createElement('span');
+			likeCount.className = 'flex shrink-0 items-center gap-1 text-xs text-slate-500 dark:text-slate-400';
+			likeCount.textContent = `👍 ${likes}`;
+
+			link.append(title, likeCount);
+			li.appendChild(link);
+			list.appendChild(li);
+		}
+	});
+</script>

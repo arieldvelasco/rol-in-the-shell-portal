@@ -1,0 +1,41 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { tagPillClass } from '../lib/styles';
+
+interface Props {
+	resena: CollectionEntry<'resenas'>;
+}
+
+const { resena } = Astro.props;
+const formattedDate = resena.data.date.toLocaleDateString('es-AR', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+	timeZone: 'UTC',
+});
+---
+
+<li data-sistema={resena.data.sistema}>
+	<a
+		href={`/resenas/${resena.id}`}
+		class="block rounded-lg border border-slate-200 p-5 transition hover:border-indigo-400 hover:shadow-sm dark:border-slate-800 dark:hover:border-indigo-500"
+	>
+		<time datetime={resena.data.date.toISOString()} class="text-xs text-slate-500 dark:text-slate-400">
+			{formattedDate}
+		</time>
+		<h2 class="mt-1 text-lg font-semibold">{resena.data.title}</h2>
+		<p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+			{resena.data.producto} — {resena.data.editorial}
+		</p>
+
+		<div class="mt-3 flex items-end justify-between gap-2">
+			<ul class="flex flex-wrap gap-2">
+				<li class={tagPillClass}>{resena.data.sistema}</li>
+				{resena.data.tags.map((tag) => <li class={tagPillClass}>{tag}</li>)}
+			</ul>
+			<span class="shrink-0 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+				{resena.data.puntuacion}/10
+			</span>
+		</div>
+	</a>
+</li>

@@ -1,0 +1,442 @@
+---
+interface Props {
+	contentType: 'blog' | 'resena' | 'asset';
+	contentSlug: string;
+}
+
+const { contentType, contentSlug } = Astro.props;
+---
+
+<section
+	data-comments
+	data-content-type={contentType}
+	data-content-slug={contentSlug}
+	class="mt-12 border-t border-slate-200 pt-8 dark:border-slate-800"
+>
+	<h2 class="text-xl font-semibold">Comentarios</h2>
+
+	<div data-auth-area class="mt-4"></div>
+
+	<form data-comment-form class="mt-4 hidden">
+		<input
+			data-comment-alias
+			type="text"
+			placeholder="Nombre a mostrar (opcional)"
+			class="w-full rounded-md border border-slate-200 bg-transparent p-2 text-sm dark:border-slate-800"
+		/>
+		<textarea
+			data-comment-input
+			rows="3"
+			required
+			placeholder="Escribí un comentario..."
+			class="mt-2 w-full rounded-md border border-slate-200 bg-transparent p-3 text-sm dark:border-slate-800"
+		></textarea>
+		<button
+			type="submit"
+			class="mt-2 rounded-md bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500"
+		>
+			Comentar
+		</button>
+	</form>
+
+	<ul data-comments-list class="mt-6 space-y-4"></ul>
+</section>
+
+<script>
+	import { supabase } from '../lib/supabase';
+	import { getFingerprint } from '../lib/fingerprint';
+
+	interface CommentRow {
+		id: string;
+		author_name: string;
+		author_avatar_url: string | null;
+		alias: string | null;
+		body: string;
+		created_at: string;
+		parent_comment_id: string | null;
+	}
+
+	interface CommentNode extends CommentRow {
+		replies: CommentNode[];
+	}
+
+	interface ReactionSummary {
+		like: number;
+		dislike: number;
+		own: 'like' | 'dislike' | null;
+	}
+
+	const REACTION_ACTIVE_CLASSES = ['bg-indigo-50', 'text-indigo-600', 'dark:bg-indigo-950', 'dark:text-indigo-400'];
+
+	document.querySelectorAll<HTMLElement>('[data-comments]').forEach((section) => {
+		const contentType = section.dataset.contentType!;
+		const contentSlug = section.dataset.contentSlug!;
+		const authArea = section.querySelector<HTMLElement>('[data-auth-area]')!;
+		const form = section.querySelector<HTMLFormElement>('[data-comment-form]')!;
+		const aliasInput = section.querySelector<HTMLInputElement>('[data-comment-alias]')!;
+		const input = section.querySelector<HTMLTextAreaElement>('[data-comment-input]')!;
+		const list = section.querySelector<HTMLElement>('[data-comments-list]')!;
+		const fingerprint = getFingerprint();
+
+		let currentUser: { id: string; user_metadata?: Record<string, unknown> } | null = null;
+
+		function oauthName(user: { user_metadata?: Record<string, unknown> }): string {
+			return (user.user_metadata?.full_name ?? user.user_metadata?.name ?? 'Usuario') as string;
+		}
+
+		function renderAuthArea(user: typeof currentUser) {
+			currentUser = user;
+			if (user) {
+				const name = oauthName(user);
+				aliasInput.placeholder = `Nombre a mostrar (opcional, por defecto "${name}")`;
+				authArea.innerHTML = '';
+				const p = document.createElement('p');
+				p.className = 'text-sm text-slate-600 dark:text-slate-400';
+				p.textContent = `Comentando como ${name} · `;
+				const logout = document.createElement('button');
+				logout.type = 'button';
+				logout.textContent = 'Cerrar sesión';
+				logout.className = 'font-medium text-indigo-600 hover:underline dark:text-indigo-400';
+				logout.addEventListener('click', () => supabase.auth.signOut());
+				p.appendChild(logout);
+				authArea.appendChild(p);
+				form.classList.remove('hidden');
+			} else {
+				authArea.innerHTML = '';
+				const p = document.createElement('p');
+				p.className = 'text-sm text-slate-600 dark:text-slate-400';
+				p.textContent = 'Iniciá sesión para comentar: ';
+				authArea.appendChild(p);
+
+				const buttons = document.createElement('div');
+				buttons.className = 'mt-2 flex gap-2';
+				(['discord', 'google'] as const).forEach((provider) => {
+					const button = document.createElement('button');
+					button.type = 'button';
+					button.textContent = provider === 'discord' ? 'Discord' : 'Google';
+					button.className =
+						'rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800';
+					button.addEventListener('click', () =>
+						supabase.auth.signInWithOAuth({ provider, options: { redirectTo: window.location.href } })
+					);
+					buttons.appendChild(button);
+				});
+				authArea.appendChild(buttons);
+				form.classList.add('hidden');
+			}
+			renderComments();
+		}
+
+		function buildTree(rows: CommentRow[]): { roots: CommentNode[]; nodesById: Map<string, CommentNode> } {
+			const nodesById = new Map<string, CommentNode>(rows.map((r) => [r.id, { ...r, replies: [] }]));
+			const roots: CommentNode[] = [];
+			for (const node of nodesById.values()) {
+				const parent = node.parent_comment_id ? nodesById.get(node.parent_comment_id) : undefined;
+				if (parent) {
+					parent.replies.push(node);
+				} else {
+					roots.push(node);
+				}
+			}
+			return { roots, nodesById };
+		}
+
+		function displayName(row: CommentRow): string {
+			return row.alias?.trim() || row.author_name;
+		}
+
+		function getInitials(name: string): string {
+			const words = name.trim().split(/\s+/).filter(Boolean);
+			if (words.length === 0) return '?';
+			const initials = words.length === 1 ? words[0].slice(0, 2) : words[0][0] + words[1][0];
+			return initials.toUpperCase();
+		}
+
+		function renderAvatar(row: CommentRow): HTMLElement {
+			const name = displayName(row);
+			if (row.author_avatar_url) {
+				const img = document.createElement('img');
+				img.src = row.author_avatar_url;
+				img.alt = '';
+				img.className = 'h-8 w-8 flex-shrink-0 rounded-full object-cover';
+				return img;
+			}
+			const fallback = document.createElement('div');
+			fallback.className =
+				'flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300';
+			fallback.textContent = getInitials(name);
+			fallback.setAttribute('aria-hidden', 'true');
+			return fallback;
+		}
+
+		function countDescendants(node: CommentNode): number {
+			let count = node.replies.length;
+			for (const child of node.replies) count += countDescendants(child);
+			return count;
+		}
+
+		async function insertComment(body: string, alias: string | null, parentCommentId: string | null) {
+			if (!currentUser) return;
+			await supabase.from('comments').insert({
+				content_type: contentType,
+				content_slug: contentSlug,
+				user_id: currentUser.id,
+				author_name: oauthName(currentUser),
+				author_avatar_url: (currentUser.user_metadata?.avatar_url ?? null) as string | null,
+				alias: alias && alias.trim() ? alias.trim() : null,
+				body,
+				parent_comment_id: parentCommentId,
+			});
+		}
+
+		async function toggleCommentReaction(commentId: string, kind: 'like' | 'dislike', isActive: boolean) {
+			if (isActive) {
+				await supabase
+					.from('comment_reactions')
+					.delete()
+					.match({ comment_id: commentId, fingerprint, kind });
+			} else {
+				await supabase.from('comment_reactions').delete().match({ comment_id: commentId, fingerprint });
+				await supabase.from('comment_reactions').insert({ comment_id: commentId, fingerprint, kind });
+			}
+		}
+
+		function buildReplyForm(parentId: string, onDone: () => void): HTMLFormElement {
+			const replyForm = document.createElement('form');
+			replyForm.className = 'mt-3 space-y-2';
+
+			const replyAlias = document.createElement('input');
+			replyAlias.type = 'text';
+			replyAlias.placeholder = currentUser
+				? `Nombre a mostrar (opcional, por defecto "${oauthName(currentUser)}")`
+				: 'Nombre a mostrar (opcional)';
+			replyAlias.className = 'w-full rounded-md border border-slate-200 bg-transparent p-2 text-sm dark:border-slate-800';
+
+			const replyBody = document.createElement('textarea');
+			replyBody.rows = 2;
+			replyBody.required = true;
+			replyBody.placeholder = 'Escribí una respuesta...';
+			replyBody.className = 'w-full rounded-md border border-slate-200 bg-transparent p-2 text-sm dark:border-slate-800';
+
+			const submit = document.createElement('button');
+			submit.type = 'submit';
+			submit.textContent = 'Responder';
+			submit.className = 'rounded-md bg-indigo-600 px-3 py-1 text-xs font-semibold text-white hover:bg-indigo-500';
+
+			replyForm.append(replyAlias, replyBody, submit);
+			replyForm.addEventListener('submit', async (event) => {
+				event.preventDefault();
+				const body = replyBody.value.trim();
+				if (!body) return;
+				await insertComment(body, replyAlias.value, parentId);
+				onDone();
+				await loadComments();
+			});
+
+			return replyForm;
+		}
+
+		function renderCommentBody(row: CommentNode, reactions: Map<string, ReactionSummary>): HTMLDivElement {
+			const wrapper = document.createElement('div');
+			wrapper.className = 'flex gap-3';
+
+			const avatar = renderAvatar(row);
+
+			const main = document.createElement('div');
+			main.className = 'min-w-0 flex-1';
+
+			const header = document.createElement('div');
+			header.className = 'flex items-center gap-2 text-sm';
+			const author = document.createElement('span');
+			author.className = 'font-medium';
+			author.textContent = displayName(row);
+			const date = document.createElement('time');
+			date.className = 'text-slate-500 dark:text-slate-400';
+			date.dateTime = row.created_at;
+			date.textContent = new Date(row.created_at).toLocaleDateString('es-AR', {
+				year: 'numeric',
+				month: 'long',
+				day: 'numeric',
+			});
+			header.append(author, date);
+
+			const body = document.createElement('p');
+			body.className = 'mt-1 text-sm text-slate-700 dark:text-slate-300';
+			body.textContent = row.body;
+
+			const actions = document.createElement('div');
+			actions.className = 'mt-2 flex items-center gap-2';
+
+			const summary = reactions.get(row.id) ?? { like: 0, dislike: 0, own: null };
+			(['like', 'dislike'] as const).forEach((kind) => {
+				const button = document.createElement('button');
+				button.type = 'button';
+				const isActive = summary.own === kind;
+				button.setAttribute('aria-pressed', String(isActive));
+				button.className =
+					'flex items-center gap-1 rounded-md px-2 py-1 text-xs text-slate-600 hover:text-indigo-600 dark:text-slate-300 dark:hover:text-indigo-400';
+				if (isActive) REACTION_ACTIVE_CLASSES.forEach((c) => button.classList.add(c));
+				button.textContent = `${kind === 'like' ? '👍' : '👎'} ${kind === 'like' ? summary.like : summary.dislike}`;
+				button.addEventListener('click', async () => {
+					await toggleCommentReaction(row.id, kind, button.getAttribute('aria-pressed') === 'true');
+					await loadComments();
+				});
+				actions.appendChild(button);
+			});
+
+			if (currentUser) {
+				const replyToggle = document.createElement('button');
+				replyToggle.type = 'button';
+				replyToggle.textContent = 'Responder';
+				replyToggle.className = 'text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400';
+				actions.appendChild(replyToggle);
+
+				let replyFormEl: HTMLFormElement | null = null;
+				replyToggle.addEventListener('click', () => {
+					if (replyFormEl) {
+						replyFormEl.remove();
+						replyFormEl = null;
+						return;
+					}
+					replyFormEl = buildReplyForm(row.id, () => {
+						replyFormEl?.remove();
+						replyFormEl = null;
+					});
+					main.appendChild(replyFormEl);
+				});
+			}
+
+			main.append(header, body, actions);
+			wrapper.append(avatar, main);
+			return wrapper;
+		}
+
+		// Árbol real anidado: cada respuesta a una respuesta se indenta un
+		// nivel más (estilo Reddit), a diferencia de un esquema plano con
+		// menciones. El toggle de mostrar/ocultar vive solo en la raíz y
+		// controla todo el subárbol de respuestas de una.
+		function renderReplyTree(node: CommentNode, reactions: Map<string, ReactionSummary>): HTMLUListElement {
+			const ul = document.createElement('ul');
+			ul.className = 'mt-3 ml-4 space-y-3 border-l border-slate-200 pl-4 dark:border-slate-800';
+			for (const reply of node.replies) {
+				const li = document.createElement('li');
+				li.appendChild(renderCommentBody(reply, reactions));
+				if (reply.replies.length > 0) {
+					li.appendChild(renderReplyTree(reply, reactions));
+				}
+				ul.appendChild(li);
+			}
+			return ul;
+		}
+
+		// Persiste qué hilos de respuestas están desplegados a través de
+		// re-renders (cada like/respuesta vuelve a traer los comentarios y
+		// reconstruye el DOM entero; sin esto, el hilo se volvía a colapsar
+		// cada vez, obligando a re-desplegarlo para encadenar dos acciones).
+		const expandedRoots = new Set<string>();
+
+		function renderRootComment(root: CommentNode, reactions: Map<string, ReactionSummary>): HTMLLIElement {
+			const li = document.createElement('li');
+			li.className = 'p-4';
+			li.appendChild(renderCommentBody(root, reactions));
+
+			const totalReplies = countDescendants(root);
+			if (totalReplies > 0) {
+				const repliesTree = renderReplyTree(root, reactions);
+				const isExpanded = expandedRoots.has(root.id);
+				repliesTree.classList.toggle('hidden', !isExpanded);
+
+				const toggle = document.createElement('button');
+				toggle.type = 'button';
+				toggle.className =
+					'mt-2 ml-11 flex items-center gap-1 text-xs font-medium text-indigo-600 hover:underline dark:text-indigo-400';
+				const setToggleLabel = (expanded: boolean) => {
+					toggle.textContent = expanded
+						? '▴ Ocultar respuestas'
+						: `▾ Mostrar ${totalReplies} ${totalReplies === 1 ? 'respuesta' : 'respuestas'}`;
+				};
+				setToggleLabel(isExpanded);
+				toggle.addEventListener('click', () => {
+					const expanded = !repliesTree.classList.contains('hidden');
+					repliesTree.classList.toggle('hidden', expanded);
+					setToggleLabel(!expanded);
+					if (expanded) {
+						expandedRoots.delete(root.id);
+					} else {
+						expandedRoots.add(root.id);
+					}
+				});
+
+				li.append(toggle, repliesTree);
+			}
+
+			return li;
+		}
+
+		let cachedRows: CommentRow[] = [];
+		let cachedReactions = new Map<string, ReactionSummary>();
+
+		function renderComments() {
+			list.innerHTML = '';
+			if (cachedRows.length === 0) {
+				const empty = document.createElement('p');
+				empty.className = 'text-sm text-slate-500 dark:text-slate-400';
+				empty.textContent = 'Todavía no hay comentarios.';
+				list.appendChild(empty);
+				return;
+			}
+
+			const { roots } = buildTree(cachedRows);
+			for (const root of roots) {
+				list.appendChild(renderRootComment(root, cachedReactions));
+			}
+		}
+
+		async function loadComments() {
+			const { data: rows } = await supabase
+				.from('comments')
+				.select('id, author_name, author_avatar_url, alias, body, created_at, parent_comment_id')
+				.eq('content_type', contentType)
+				.eq('content_slug', contentSlug)
+				.eq('deleted', false)
+				.order('created_at', { ascending: true });
+
+			cachedRows = rows ?? [];
+
+			const commentIds = cachedRows.map((r) => r.id);
+			cachedReactions = new Map();
+			if (commentIds.length > 0) {
+				const { data: reactionRows } = await supabase
+					.from('comment_reactions')
+					.select('comment_id, kind, fingerprint')
+					.in('comment_id', commentIds);
+
+				for (const row of reactionRows ?? []) {
+					const summary = cachedReactions.get(row.comment_id) ?? { like: 0, dislike: 0, own: null };
+					summary[row.kind as 'like' | 'dislike']++;
+					if (row.fingerprint === fingerprint) summary.own = row.kind as 'like' | 'dislike';
+					cachedReactions.set(row.comment_id, summary);
+				}
+			}
+
+			renderComments();
+		}
+
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const body = input.value.trim();
+			if (!body) return;
+
+			await insertComment(body, aliasInput.value, null);
+
+			input.value = '';
+			aliasInput.value = '';
+			await loadComments();
+		});
+
+		supabase.auth.getUser().then(({ data: { user } }) => renderAuthArea(user));
+		supabase.auth.onAuthStateChange((_event, session) => renderAuthArea(session?.user ?? null));
+
+		loadComments();
+	});
+</script>

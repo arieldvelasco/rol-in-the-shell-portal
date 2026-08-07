@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Habilita dark: basado en clase (.dark en <html>) en vez de prefers-color-scheme */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Justificado con silabeo, para el contenido generado (blog, reseñas, assets). */
+@utility prose-justify {
+	text-align: justify;
+	text-justify: inter-word;
+	word-spacing: normal;
+	letter-spacing: 0;
+	line-height: 1.5;
+	hyphens: auto;
+	word-break: break-word;
+	overflow-wrap: break-word;
+}

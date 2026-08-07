@@ -1,0 +1,37 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+import { assetTipos, assetTipoLabels } from '../../lib/asset-tipos';
+
+const assets = await getCollection('assets');
+const countByTipo = Object.fromEntries(
+	assetTipos.map((tipo) => [tipo, assets.filter((a) => a.data.tipo === tipo).length])
+);
+---
+
+<Layout title="Assets" description="Personajes, NPCs, mapas, aventuras y tablas listas para tu mesa.">
+	<section class="mx-auto max-w-5xl px-4 py-12">
+		<h1 class="text-3xl font-bold tracking-tight">Assets</h1>
+		<p class="mt-2 text-slate-600 dark:text-slate-400">
+			Personajes, NPCs, mapas, aventuras y tablas listas para usar en tu mesa.
+		</p>
+
+		<ul class="mt-8 grid gap-4 sm:grid-cols-2">
+			{
+				assetTipos.map((tipo) => (
+					<li>
+						<a
+							href={`/assets/${tipo}`}
+							class="block rounded-lg border border-slate-200 p-6 transition hover:border-indigo-400 hover:shadow-sm dark:border-slate-800 dark:hover:border-indigo-500"
+						>
+							<h2 class="text-xl font-semibold">{assetTipoLabels[tipo]}</h2>
+							<p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
+								{countByTipo[tipo]} disponibles
+							</p>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</section>
+</Layout>

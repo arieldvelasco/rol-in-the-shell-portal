@@ -1,0 +1,28 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ResenaCard from '../../components/ResenaCard.astro';
+import SistemaFilter from '../../components/SistemaFilter.astro';
+import { getCollection } from 'astro:content';
+
+const resenas = (await getCollection('resenas')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const sistemas = [...new Set(resenas.map((r) => r.data.sistema))].sort();
+---
+
+<Layout title="Reseñas" description="Manuales, aventuras y suplementos, sistema por sistema.">
+	<section class="mx-auto max-w-5xl px-4 py-12">
+		<h1 class="text-3xl font-bold tracking-tight">Reseñas</h1>
+		<p class="mt-2 text-slate-600 dark:text-slate-400">
+			Manuales, aventuras y suplementos, sistema por sistema.
+		</p>
+
+		<div class="mt-8">
+			<SistemaFilter sistemas={sistemas} listId="resenas-list" />
+		</div>
+
+		<ul id="resenas-list" class="grid gap-4 sm:grid-cols-2">
+			{resenas.map((resena) => <ResenaCard resena={resena} />)}
+		</ul>
+	</section>
+</Layout>

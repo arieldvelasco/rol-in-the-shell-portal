@@ -1,0 +1,42 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import AssetCard from '../../../components/AssetCard.astro';
+import SistemaFilter from '../../../components/SistemaFilter.astro';
+import { getCollection } from 'astro:content';
+import { assetTipos, assetTipoLabels, type AssetTipo } from '../../../lib/asset-tipos';
+
+export async function getStaticPaths() {
+	return assetTipos.map((tipo) => ({ params: { tipo } }));
+}
+
+const { tipo } = Astro.params as { tipo: AssetTipo };
+const assets = await getCollection('assets', (asset) => asset.data.tipo === tipo);
+const sistemas = [...new Set(assets.map((a) => a.data.sistema))].sort();
+const label = assetTipoLabels[tipo];
+---
+
+<Layout title={label} description={`Assets de tipo ${label.toLowerCase()} para tu mesa de rol.`}>
+	<section class="mx-auto max-w-5xl px-4 py-12">
+		<h1 class="text-3xl font-bold tracking-tight">{label}</h1>
+
+		{
+			sistemas.length > 0 && (
+				<div class="mt-8">
+					<SistemaFilter sistemas={sistemas} listId="assets-list" />
+				</div>
+			)
+		}
+
+		{
+			assets.length > 0 ? (
+				<ul id="assets-list" class="grid gap-4 sm:grid-cols-2">
+					{assets.map((asset) => (
+						<AssetCard asset={asset} />
+					))}
+				</ul>
+			) : (
+				<p class="mt-8 text-slate-600 dark:text-slate-400">Todavía no hay assets en esta categoría.</p>
+			)
+		}
+	</section>
+</Layout>
