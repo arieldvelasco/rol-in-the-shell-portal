@@ -10,18 +10,11 @@ const { asset } = Astro.props;
 ---
 
 <li data-sistema={asset.data.sistema}>
-	<a
-		href={`/assets/${asset.data.tipo}/${asset.id}`}
-		class="block rounded-lg border border-slate-200 p-5 transition hover:border-indigo-400 hover:shadow-sm dark:border-slate-800 dark:hover:border-indigo-500"
-	>
+	<a href={`/assets/${asset.data.tipo}/${asset.id}`} class="card shadow-sm transition hover:shadow-md">
 		<div class="flex justify-end">
 			<span class={tagPillClass}>{asset.data.sistema}</span>
 		</div>
-		<h2 class="mt-2 text-lg font-semibold">{asset.data.title}</h2>
-		{
-			asset.data.description && (
-				<p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{asset.data.description}</p>
-			)
-		}
+		<h2 class="card-title">{asset.data.title}</h2>
+		{asset.data.description && <p class="card-body">{asset.data.description}</p>}
 	</a>
 </li>

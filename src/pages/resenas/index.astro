@@ -12,10 +12,8 @@ const sistemas = [...new Set(resenas.map((r) => r.data.sistema))].sort();
 
 <Layout title="Reseñas" description="Manuales, aventuras y suplementos, sistema por sistema.">
 	<section class="mx-auto max-w-5xl px-4 py-12">
-		<h1 class="text-3xl font-bold tracking-tight">Reseñas</h1>
-		<p class="mt-2 text-slate-600 dark:text-slate-400">
-			Manuales, aventuras y suplementos, sistema por sistema.
-		</p>
+		<h1 class="text-3xl">Reseñas</h1>
+		<p class="mt-2 text-muted">Qué sistema conviene para tu próxima mesa, con pros y contras reales de juego.</p>
 
 		<div class="mt-8">
 			<SistemaFilter sistemas={sistemas} listId="resenas-list" />

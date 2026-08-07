@@ -11,23 +11,16 @@ const countByTipo = Object.fromEntries(
 
 <Layout title="Assets" description="Personajes, NPCs, mapas, aventuras y tablas listas para tu mesa.">
 	<section class="mx-auto max-w-5xl px-4 py-12">
-		<h1 class="text-3xl font-bold tracking-tight">Assets</h1>
-		<p class="mt-2 text-slate-600 dark:text-slate-400">
-			Personajes, NPCs, mapas, aventuras y tablas listas para usar en tu mesa.
-		</p>
+		<h1 class="text-3xl">Assets</h1>
+		<p class="mt-2 text-muted">Personajes, NPCs, mapas, tablas y aventuras, listos para bajar y usar en tu mesa.</p>
 
 		<ul class="mt-8 grid gap-4 sm:grid-cols-2">
 			{
 				assetTipos.map((tipo) => (
 					<li>
-						<a
-							href={`/assets/${tipo}`}
-							class="block rounded-lg border border-slate-200 p-6 transition hover:border-indigo-400 hover:shadow-sm dark:border-slate-800 dark:hover:border-indigo-500"
-						>
-							<h2 class="text-xl font-semibold">{assetTipoLabels[tipo]}</h2>
-							<p class="mt-2 text-sm text-slate-600 dark:text-slate-400">
-								{countByTipo[tipo]} disponibles
-							</p>
+						<a href={`/assets/${tipo}`} class="card shadow-sm transition hover:shadow-md">
+							<h2 class="card-title">{assetTipoLabels[tipo]}</h2>
+							<p class="card-body">{countByTipo[tipo]} disponibles</p>
 						</a>
 					</li>
 				))

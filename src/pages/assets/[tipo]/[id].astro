@@ -23,24 +23,14 @@ const { Content } = await render(asset);
 	<article class="mx-auto max-w-3xl px-4 py-12">
 		<div class="flex items-center gap-3">
 			<span class={tagPillClass}>{asset.data.sistema}</span>
-			{
-				asset.data.nivel !== undefined && (
-					<span class="text-xs text-slate-500 dark:text-slate-400">Nivel {asset.data.nivel}</span>
-				)
-			}
+			{asset.data.nivel !== undefined && <span class="text-xs text-muted">Nivel {asset.data.nivel}</span>}
 		</div>
 
-		<h1 class="mt-2 text-3xl font-bold tracking-tight">{asset.data.title}</h1>
+		<h1 class="mt-2 text-3xl">{asset.data.title}</h1>
 
-		{
-			asset.data.description && (
-				<p class="mt-2 text-slate-600 dark:text-slate-400">{asset.data.description}</p>
-			)
-		}
+		{asset.data.description && <p class="mt-2 text-muted">{asset.data.description}</p>}
 
-		<div
-			class="prose prose-slate prose-justify mt-8 max-w-none dark:prose-invert prose-a:text-indigo-600 dark:prose-a:text-indigo-400"
-		>
+		<div class="prose prose-invert prose-justify mt-8 max-w-none prose-a:text-accent">
 			<Content />
 		</div>
 

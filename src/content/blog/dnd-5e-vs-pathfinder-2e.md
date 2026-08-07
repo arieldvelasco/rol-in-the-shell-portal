@@ -18,9 +18,3 @@ D&D 5e tiene mayor volumen de material y comunidad en español. Pathfinder 2e co
 ## Conclusión
 
 Si buscás algo directo para empezar, D&D 5e. Si ya tenés experiencia y querés más profundidad táctica, Pathfinder 2e.
-
-## Un poco más de texto de prueba
-
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent internacionalización extraordinariamente pellentesque, sed hendrerit contraproducente semper, felis nisi vestibulum ligula, quis paracaidista fermentum urna nunc et arcu. Suspendisse potenti. Duis desoxirribonucleico, magna interdisciplinariamente non fringilla, orci mauris malesuada extraordinariamente, vel electrocardiograma justo nunc eget mauris.
-
-Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nulla incomprensibilidad, sapien eu bibendum interdisciplinariamente, urna metus fermentum internacionalización, at aliquam magna quam eu sem. Aenean anticonstitucionalmente, felis sed convallis desproporcionadamente, dolor mauris malesuada extraordinariamente, sed hendrerit contraproducente semper.

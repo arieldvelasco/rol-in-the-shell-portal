@@ -8,35 +8,45 @@ const latestEntries = await getLatestEntries(6);
 ---
 
 <Layout title="Inicio">
-	<section class="mx-auto max-w-5xl px-4 py-20 text-center">
-		<h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Rol in the Shell</h1>
-		<p class="mx-auto mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-400">
-			Blog de opinión y reseñas, y assets para GMs y jugadores: personajes, NPCs, mapas, aventuras y
-			tablas.
+	<section class="mx-auto max-w-5xl px-4 py-16">
+		<h1 class="max-w-[18ch] text-5xl">Tu mesa, mejor preparada</h1>
+		<p class="mt-4 max-w-2xl text-lg text-muted">
+			Blog, reseñas de sistemas y recursos listos para usar: personajes, NPCs, mapas, tablas y
+			aventuras para tus partidas.
 		</p>
+		<div class="mt-6 flex flex-wrap gap-3">
+			<a href="/assets" class="btn btn-primary">Explorar recursos</a>
+			<a href="/blog" class="btn btn-ghost">Leer el blog</a>
+		</div>
 	</section>
 
 	{
 		latestEntries.length > 0 && (
-			<section class="mx-auto max-w-5xl px-4 pb-20">
+			<div class="mx-auto max-w-5xl px-4">
+				<hr class="hr" />
+			</div>
+		)
+	}
+
+	{
+		latestEntries.length > 0 && (
+			<section class="mx-auto max-w-5xl px-4 pb-20 pt-8">
 				<div class="grid gap-8 lg:grid-cols-[2fr_1fr]">
 					<div>
-						<h2 class="mb-6 text-2xl font-semibold">Últimas entradas</h2>
-						<ul class="space-y-4">
+						<h6 class="mb-2 text-accent">Novedades</h6>
+						<h2 class="mb-5">Últimas publicaciones</h2>
+						<div class="grid gap-4 sm:grid-cols-2">
 							{latestEntries.map((entry) => (
-								<li>
-									<a
-										href={entry.href}
-										class="flex items-center justify-between gap-4 rounded-lg border border-slate-200 p-4 hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
-									>
-										<span class="font-medium">{entry.title}</span>
-										<span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-											{entry.kind}
-										</span>
-									</a>
-								</li>
+								<a href={entry.href} class="card shadow-sm transition hover:shadow-md">
+									<span class="card-kicker">{entry.kind}</span>
+									<h3 class="card-title">{entry.title}</h3>
+									{entry.excerpt && <p class="card-body">{entry.excerpt}</p>}
+									<time class="card-meta" datetime={entry.date.toISOString()}>
+										{entry.date.toLocaleDateString('es-AR', { year: 'numeric', month: 'long', day: 'numeric' })}
+									</time>
+								</a>
 							))}
-						</ul>
+						</div>
 					</div>
 					<TopLikedPosts entries={allEntries} />
 				</div>

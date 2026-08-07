@@ -6,6 +6,7 @@ export interface ContentEntry {
 	href: string;
 	date: Date;
 	kind: string;
+	excerpt: string;
 	contentType: 'blog' | 'resena' | 'asset';
 	contentSlug: string;
 }
@@ -23,6 +24,7 @@ export async function getAllEntries(): Promise<ContentEntry[]> {
 			href: `/blog/${post.id}`,
 			date: post.data.date,
 			kind: 'Blog',
+			excerpt: post.data.description,
 			contentType: 'blog' as const,
 			contentSlug: post.id,
 		})),
@@ -31,6 +33,7 @@ export async function getAllEntries(): Promise<ContentEntry[]> {
 			href: `/resenas/${resena.id}`,
 			date: resena.data.date,
 			kind: 'Reseña',
+			excerpt: `${resena.data.producto} — ${resena.data.editorial}`,
 			contentType: 'resena' as const,
 			contentSlug: resena.id,
 		})),
@@ -39,6 +42,7 @@ export async function getAllEntries(): Promise<ContentEntry[]> {
 			href: `/assets/${asset.data.tipo}/${asset.id}`,
 			date: asset.data.date,
 			kind: assetTipoSingularLabels[asset.data.tipo],
+			excerpt: asset.data.description ?? '',
 			contentType: 'asset' as const,
 			contentSlug: asset.id,
 		})),

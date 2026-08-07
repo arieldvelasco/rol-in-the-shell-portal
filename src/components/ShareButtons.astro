@@ -1,4 +1,6 @@
 ---
+import { Icon } from 'astro-icon/components';
+
 interface Props {
 	title: string;
 }
@@ -6,39 +8,66 @@ interface Props {
 const { title } = Astro.props;
 ---
 
-<div data-share data-share-title={title} class="flex flex-wrap items-center gap-2">
-	<span class="text-sm text-slate-500 dark:text-slate-400">Compartir:</span>
-	<a
-		data-share-link="whatsapp"
-		target="_blank"
-		rel="noopener noreferrer"
-		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
-	>
-		WhatsApp
-	</a>
-	<a
-		data-share-link="x"
-		target="_blank"
-		rel="noopener noreferrer"
-		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
-	>
-		X
-	</a>
-	<a
-		data-share-link="facebook"
-		target="_blank"
-		rel="noopener noreferrer"
-		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
-	>
-		Facebook
-	</a>
-	<button
-		type="button"
-		data-share-copy
-		class="rounded-md border border-slate-200 px-3 py-1.5 text-sm hover:border-indigo-400 dark:border-slate-800 dark:hover:border-indigo-500"
-	>
-		🔗 Copiar enlace
+<div data-share data-share-title={title}>
+	<button type="button" data-share-open aria-label="Compartir" class="btn btn-secondary btn-icon">
+		<Icon name="ph:share-network" class="h-4 w-4" aria-hidden="true" />
 	</button>
+
+	<dialog data-share-modal data-nc-dialog class="m-auto">
+		<div class="flex items-center justify-between">
+			<h2 class="dialog-title">Compartir</h2>
+			<button type="button" data-share-close aria-label="Cerrar" class="btn btn-ghost btn-icon">
+				<Icon name="ph:x" class="h-4 w-4" aria-hidden="true" />
+			</button>
+		</div>
+
+		<div class="flex items-center justify-center gap-2">
+			<a
+				data-share-link="whatsapp"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Compartir en WhatsApp"
+				class="btn btn-secondary btn-icon"
+			>
+				<Icon name="simple-icons:whatsapp" class="h-4 w-4" aria-hidden="true" />
+			</a>
+			<a
+				data-share-link="x"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Compartir en X"
+				class="btn btn-secondary btn-icon"
+			>
+				<Icon name="simple-icons:x" class="h-4 w-4" aria-hidden="true" />
+			</a>
+			<a
+				data-share-link="facebook"
+				target="_blank"
+				rel="noopener noreferrer"
+				aria-label="Compartir en Facebook"
+				class="btn btn-secondary btn-icon"
+			>
+				<Icon name="simple-icons:facebook" class="h-4 w-4" aria-hidden="true" />
+			</a>
+			<button
+				type="button"
+				data-share-instagram
+				aria-label="Copiar enlace para compartir en Instagram"
+				title="Instagram no permite compartir un link directo: copia el enlace y abre Instagram para pegarlo en tu historia o DM"
+				class="btn btn-secondary btn-icon"
+			>
+				<Icon name="simple-icons:instagram" class="h-4 w-4" aria-hidden="true" />
+			</button>
+		</div>
+
+		<div class="flex items-center gap-2">
+			<input data-share-url-input type="text" readonly class="input" />
+			<button type="button" data-share-copy aria-label="Copiar enlace" class="btn btn-secondary btn-icon flex-shrink-0">
+				<Icon name="ph:link-simple" data-copy-icon-default class="h-4 w-4" aria-hidden="true" />
+				<Icon name="ph:check" data-copy-icon-success class="hidden h-4 w-4" aria-hidden="true" />
+			</button>
+		</div>
+	</dialog>
 </div>
 
 <script>
@@ -59,6 +88,19 @@ const { title } = Astro.props;
 			link.href = shareUrls[network];
 		});
 
+		const urlInput = container.querySelector<HTMLInputElement>('[data-share-url-input]')!;
+		urlInput.value = url;
+
+		const modal = container.querySelector<HTMLDialogElement>('[data-share-modal]')!;
+		const openButton = container.querySelector<HTMLButtonElement>('[data-share-open]')!;
+		const closeButton = container.querySelector<HTMLButtonElement>('[data-share-close]')!;
+
+		openButton.addEventListener('click', () => modal.showModal());
+		closeButton.addEventListener('click', () => modal.close());
+		modal.addEventListener('click', (event) => {
+			if (event.target === modal) modal.close();
+		});
+
 		function copyFallback(text: string): boolean {
 			const input = document.createElement('textarea');
 			input.value = text;
@@ -71,20 +113,40 @@ const { title } = Astro.props;
 			return ok;
 		}
 
-		const copyButton = container.querySelector<HTMLButtonElement>('[data-share-copy]')!;
-		const copyLabel = copyButton.textContent;
-		copyButton.addEventListener('click', async () => {
-			let copied = false;
+		async function copyUrl(): Promise<boolean> {
 			try {
 				await navigator.clipboard.writeText(url);
-				copied = true;
+				return true;
 			} catch {
-				copied = copyFallback(url);
+				return copyFallback(url);
 			}
-			copyButton.textContent = copied ? '✓ ¡Copiado!' : 'No se pudo copiar';
+		}
+
+		const copyButton = container.querySelector<HTMLButtonElement>('[data-share-copy]')!;
+		const copyIconDefault = copyButton.querySelector<HTMLElement>('[data-copy-icon-default]')!;
+		const copyIconSuccess = copyButton.querySelector<HTMLElement>('[data-copy-icon-success]')!;
+		const copyDefaultLabel = copyButton.getAttribute('aria-label')!;
+
+		copyButton.addEventListener('click', async () => {
+			const copied = await copyUrl();
+			copyIconDefault.classList.toggle('hidden', copied);
+			copyIconSuccess.classList.toggle('hidden', !copied);
+			copyButton.setAttribute('aria-label', copied ? '¡Copiado!' : 'No se pudo copiar');
 			setTimeout(() => {
-				copyButton.textContent = copyLabel;
-			}, 2000);
+				copyIconDefault.classList.remove('hidden');
+				copyIconSuccess.classList.add('hidden');
+				copyButton.setAttribute('aria-label', copyDefaultLabel);
+			}, 1200);
+		});
+
+		const instagramButton = container.querySelector<HTMLButtonElement>('[data-share-instagram]')!;
+		const instagramDefaultLabel = instagramButton.getAttribute('aria-label')!;
+
+		instagramButton.addEventListener('click', async () => {
+			const copied = await copyUrl();
+			instagramButton.setAttribute('aria-label', copied ? 'Enlace copiado, abriendo Instagram…' : 'No se pudo copiar el enlace');
+			setTimeout(() => instagramButton.setAttribute('aria-label', instagramDefaultLabel), 1200);
+			if (copied) window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
 		});
 	});
 </script>

@@ -23,33 +23,29 @@ const { Content } = await render(resena);
 	<article class="mx-auto max-w-3xl px-4 py-12">
 		<div class="flex items-center gap-3">
 			<span class={tagPillClass}>{resena.data.sistema}</span>
-			<span class="text-sm font-semibold text-indigo-600 dark:text-indigo-400">
-				{resena.data.puntuacion}/10
-			</span>
+			<span class="text-sm font-semibold text-accent">{resena.data.puntuacion}/10</span>
 		</div>
-		<h1 class="mt-2 text-3xl font-bold tracking-tight">{resena.data.title}</h1>
-		<p class="mt-1 text-slate-600 dark:text-slate-400">
+		<h1 class="mt-2 text-3xl">{resena.data.title}</h1>
+		<p class="mt-1 text-muted">
 			{resena.data.producto} — {resena.data.editorial}
 		</p>
 
 		<div class="mt-8 grid gap-4 sm:grid-cols-2">
-			<div class="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-				<h2 class="font-semibold text-emerald-600 dark:text-emerald-400">Pros</h2>
-				<ul class="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-400">
+			<div class="card">
+				<h2 class="card-title">Pros</h2>
+				<ul class="mt-1 list-inside list-disc text-sm text-muted">
 					{resena.data.pros.map((pro) => <li>{pro}</li>)}
 				</ul>
 			</div>
-			<div class="rounded-lg border border-slate-200 p-4 dark:border-slate-800">
-				<h2 class="font-semibold text-rose-600 dark:text-rose-400">Contras</h2>
-				<ul class="mt-2 list-inside list-disc text-sm text-slate-600 dark:text-slate-400">
+			<div class="card">
+				<h2 class="card-title">Contras</h2>
+				<ul class="mt-1 list-inside list-disc text-sm text-muted">
 					{resena.data.contras.map((contra) => <li>{contra}</li>)}
 				</ul>
 			</div>
 		</div>
 
-		<div
-			class="prose prose-slate prose-justify mt-8 max-w-none dark:prose-invert prose-a:text-indigo-600 dark:prose-a:text-indigo-400"
-		>
+		<div class="prose prose-invert prose-justify mt-8 max-w-none prose-a:text-accent">
 			<Content />
 		</div>
 
