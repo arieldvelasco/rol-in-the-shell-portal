@@ -1,0 +1,29 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { tagPillClass } from '../lib/styles';
+
+interface Props {
+	recurso: CollectionEntry<'recursos'>;
+}
+
+const { recurso } = Astro.props;
+---
+
+<li data-sistema={recurso.data.sistema}>
+	<a href={`/recursos/${recurso.data.tipo}/${recurso.id}`} class="card shadow-sm transition hover:shadow-md">
+		{
+			recurso.data.cover && (
+				<img
+					src={recurso.data.cover}
+					alt=""
+					class="-mx-4 -mt-4 mb-1 aspect-video w-[calc(100%+32px)] rounded-t-md object-cover"
+				/>
+			)
+		}
+		<div class="flex justify-end">
+			<span class={tagPillClass}>{recurso.data.sistema}</span>
+		</div>
+		<h2 class="card-title">{recurso.data.title}</h2>
+		{recurso.data.description && <p class="card-body">{recurso.data.description}</p>}
+	</a>
+</li>

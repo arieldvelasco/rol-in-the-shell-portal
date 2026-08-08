@@ -1,0 +1,30 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import TutorialCard from '../../components/TutorialCard.astro';
+import SistemaFilter from '../../components/SistemaFilter.astro';
+import { getCollection } from 'astro:content';
+
+const tutoriales = (await getCollection('tutoriales')).sort(
+	(a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+const categorias = [...new Set(tutoriales.map((t) => t.data.categoria))].sort();
+---
+
+<Layout title="Tutoriales" description="Instrucciones técnicas sobre herramientas, VTT y sistemas de rol.">
+	<section class="mx-auto max-w-5xl px-4 py-12">
+		<h1 class="text-3xl">Tutoriales</h1>
+		<p class="mt-2 text-muted">Instrucciones técnicas sobre herramientas, VTT y sistemas de rol.</p>
+
+		{
+			categorias.length > 0 && (
+				<div class="mt-8">
+					<SistemaFilter sistemas={categorias} listId="tutoriales-list" />
+				</div>
+			)
+		}
+
+		<ul id="tutoriales-list" class="mt-8 grid gap-4 sm:grid-cols-2">
+			{tutoriales.map((tutorial) => <TutorialCard tutorial={tutorial} />)}
+		</ul>
+	</section>
+</Layout>

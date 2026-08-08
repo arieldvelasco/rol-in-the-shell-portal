@@ -1,0 +1,42 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import RecursoCard from '../../../components/RecursoCard.astro';
+import SistemaFilter from '../../../components/SistemaFilter.astro';
+import { getCollection } from 'astro:content';
+import { recursoTipos, recursoTipoLabels, type RecursoTipo } from '../../../lib/recurso-tipos';
+
+export async function getStaticPaths() {
+	return recursoTipos.map((tipo) => ({ params: { tipo } }));
+}
+
+const { tipo } = Astro.params as { tipo: RecursoTipo };
+const recursos = await getCollection('recursos', (recurso) => recurso.data.tipo === tipo);
+const sistemas = [...new Set(recursos.map((r) => r.data.sistema))].sort();
+const label = recursoTipoLabels[tipo];
+---
+
+<Layout title={label} description={`Recursos de tipo ${label.toLowerCase()} para tu mesa de rol.`}>
+	<section class="mx-auto max-w-5xl px-4 py-12">
+		<h1 class="text-3xl">{label}</h1>
+
+		{
+			sistemas.length > 0 && (
+				<div class="mt-8">
+					<SistemaFilter sistemas={sistemas} listId="recursos-list" />
+				</div>
+			)
+		}
+
+		{
+			recursos.length > 0 ? (
+				<ul id="recursos-list" class="grid gap-4 sm:grid-cols-2">
+					{recursos.map((recurso) => (
+						<RecursoCard recurso={recurso} />
+					))}
+				</ul>
+			) : (
+				<p class="mt-8 text-muted">Todavía no hay recursos en esta categoría.</p>
+			)
+		}
+	</section>
+</Layout>

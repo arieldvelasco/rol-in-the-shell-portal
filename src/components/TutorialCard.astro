@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { tagPillClass } from '../lib/styles';
+import { tutorialCategoriaLabels } from '../lib/tutorial-categorias';
+
+interface Props {
+	tutorial: CollectionEntry<'tutoriales'>;
+}
+
+const { tutorial } = Astro.props;
+const formattedDate = tutorial.data.date.toLocaleDateString('es-AR', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric',
+	timeZone: 'UTC',
+});
+---
+
+<li data-sistema={tutorial.data.categoria}>
+	<a href={`/tutoriales/${tutorial.id}`} class="card shadow-sm transition hover:shadow-md">
+		<span class="card-kicker">{tutorialCategoriaLabels[tutorial.data.categoria]}</span>
+		<h2 class="card-title">{tutorial.data.title}</h2>
+		<p class="card-body">{tutorial.data.description}</p>
+		<div class="card-meta">
+			<time datetime={tutorial.data.date.toISOString()}>{formattedDate}</time>
+		</div>
+		{
+			tutorial.data.tags.length > 0 && (
+				<ul class="flex flex-wrap gap-2">
+					{tutorial.data.tags.map((tag) => (
+						<li class={tagPillClass}>{tag}</li>
+					))}
+				</ul>
+			)
+		}
+	</a>
+</li>

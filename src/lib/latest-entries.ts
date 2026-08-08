@@ -1,5 +1,5 @@
 import { getCollection } from 'astro:content';
-import { assetTipoSingularLabels } from './asset-tipos';
+import { recursoTipoSingularLabels } from './recurso-tipos';
 
 export interface ContentEntry {
 	title: string;
@@ -7,15 +7,16 @@ export interface ContentEntry {
 	date: Date;
 	kind: string;
 	excerpt: string;
-	contentType: 'blog' | 'resena' | 'asset';
+	contentType: 'blog' | 'resena' | 'tutorial' | 'asset';
 	contentSlug: string;
 }
 
 export async function getAllEntries(): Promise<ContentEntry[]> {
-	const [blog, resenas, assets] = await Promise.all([
+	const [blog, resenas, tutoriales, recursos] = await Promise.all([
 		getCollection('blog'),
 		getCollection('resenas'),
-		getCollection('assets'),
+		getCollection('tutoriales'),
+		getCollection('recursos'),
 	]);
 
 	return [
@@ -37,14 +38,23 @@ export async function getAllEntries(): Promise<ContentEntry[]> {
 			contentType: 'resena' as const,
 			contentSlug: resena.id,
 		})),
-		...assets.map((asset) => ({
-			title: asset.data.title,
-			href: `/assets/${asset.data.tipo}/${asset.id}`,
-			date: asset.data.date,
-			kind: assetTipoSingularLabels[asset.data.tipo],
-			excerpt: asset.data.description ?? '',
+		...tutoriales.map((tutorial) => ({
+			title: tutorial.data.title,
+			href: `/tutoriales/${tutorial.id}`,
+			date: tutorial.data.date,
+			kind: 'Tutorial',
+			excerpt: tutorial.data.description,
+			contentType: 'tutorial' as const,
+			contentSlug: tutorial.id,
+		})),
+		...recursos.map((recurso) => ({
+			title: recurso.data.title,
+			href: `/recursos/${recurso.data.tipo}/${recurso.id}`,
+			date: recurso.data.date,
+			kind: recursoTipoSingularLabels[recurso.data.tipo],
+			excerpt: recurso.data.description ?? '',
 			contentType: 'asset' as const,
-			contentSlug: asset.id,
+			contentSlug: recurso.id,
 		})),
 	];
 }

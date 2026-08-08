@@ -1,0 +1,51 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { getCollection, render } from 'astro:content';
+import { tagPillClass } from '../../../lib/styles';
+import ReactionButtons from '../../../components/ReactionButtons.astro';
+import ShareButtons from '../../../components/ShareButtons.astro';
+import CommentSection from '../../../components/CommentSection.astro';
+import ViewTracker from '../../../components/ViewTracker.astro';
+
+export async function getStaticPaths() {
+	const recursos = await getCollection('recursos');
+	return recursos.map((recurso) => ({
+		params: { tipo: recurso.data.tipo, id: recurso.id },
+		props: { recurso },
+	}));
+}
+
+const { recurso } = Astro.props;
+const { Content } = await render(recurso);
+---
+
+<Layout title={recurso.data.title} description={recurso.data.description ?? recurso.data.title}>
+	<article class="mx-auto max-w-3xl px-4 py-12">
+		<div class="flex items-center gap-3">
+			<span class={tagPillClass}>{recurso.data.sistema}</span>
+			{recurso.data.nivel !== undefined && <span class="text-xs text-muted">Nivel {recurso.data.nivel}</span>}
+		</div>
+
+		<h1 class="mt-2 text-3xl">{recurso.data.title}</h1>
+
+		{recurso.data.description && <p class="mt-2 text-muted">{recurso.data.description}</p>}
+
+		{
+			recurso.data.cover && (
+				<img src={recurso.data.cover} alt="" class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
+			)
+		}
+
+		<div class="prose prose-justify mt-8 max-w-none prose-a:text-accent">
+			<Content />
+		</div>
+
+		<div class="mt-8 flex flex-wrap items-center justify-between gap-4">
+			<ReactionButtons contentType="asset" contentSlug={recurso.id} />
+			<ShareButtons title={recurso.data.title} />
+		</div>
+
+		<CommentSection contentType="asset" contentSlug={recurso.id} />
+		<ViewTracker contentType="asset" contentSlug={recurso.id} />
+	</article>
+</Layout>

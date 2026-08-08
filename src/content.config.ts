@@ -33,13 +33,32 @@ const resenas = defineCollection({
 	}),
 });
 
-const assetTipos = ['personaje', 'npc', 'mapa', 'aventura', 'tabla'] as const;
+// Instrucciones técnicas: herramientas, VTT, sistemas de rol. Distinto de
+// `resenas` (info/opinión sobre un producto) — acá el contenido es un
+// paso a paso.
+const tutorialCategorias = ['herramienta', 'vtt', 'sistema'] as const;
 
-const assets = defineCollection({
-	loader: glob({ pattern: '**/*.md', base: './src/content/assets' }),
+const tutoriales = defineCollection({
+	loader: glob({ pattern: '**/*.md', base: './src/content/tutoriales' }),
 	schema: z.object({
 		title: z.string(),
-		tipo: z.enum(assetTipos),
+		description: z.string(),
+		categoria: z.enum(tutorialCategorias),
+		date: z.coerce.date(),
+		cover: z.string().optional(),
+		tags: z.array(z.string()).default([]),
+	}),
+});
+
+// Material propio (personajes, NPCs, mapas, aventuras, tablas) listo para
+// bajar y usar en mesa — antes "assets", renombrado a "recursos".
+const recursoTipos = ['personaje', 'npc', 'mapa', 'aventura', 'tabla'] as const;
+
+const recursos = defineCollection({
+	loader: glob({ pattern: '**/*.md', base: './src/content/recursos' }),
+	schema: z.object({
+		title: z.string(),
+		tipo: z.enum(recursoTipos),
 		sistema: z.string().default('generico'),
 		nivel: z.number().optional(),
 		archivo: z.string(),
@@ -50,5 +69,5 @@ const assets = defineCollection({
 	}),
 });
 
-export const collections = { blog, resenas, assets };
-export { assetTipos };
+export const collections = { blog, resenas, tutoriales, recursos };
+export { tutorialCategorias, recursoTipos };
