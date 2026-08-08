@@ -19,7 +19,13 @@ const { recurso } = Astro.props;
 const { Content } = await render(recurso);
 ---
 
-<Layout title={recurso.data.title} description={recurso.data.description ?? recurso.data.title}>
+<Layout
+	title={recurso.data.title}
+	description={recurso.data.description ?? recurso.data.title}
+	image={recurso.data.cover}
+	type="article"
+	article={{ datePublished: recurso.data.date }}
+>
 	<article class="mx-auto max-w-3xl px-4 py-12">
 		<div class="flex items-center gap-3">
 			<span class={tagPillClass}>{recurso.data.sistema}</span>
@@ -32,7 +38,7 @@ const { Content } = await render(recurso);
 
 		{
 			recurso.data.cover && (
-				<img src={recurso.data.cover} alt="" class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
+				<img src={recurso.data.cover} alt={recurso.data.title} class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
 			)
 		}
 

@@ -3,12 +3,45 @@ import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
 import '../styles/global.css';
 
+interface ArticleData {
+	datePublished: Date;
+	dateModified?: Date;
+	authorName?: string;
+}
+
 interface Props {
 	title: string;
 	description?: string;
+	/** URL de imagen para Open Graph/Twitter — relativa (resuelta contra `site`) o absoluta. Sin imagen si no se pasa. */
+	image?: string;
+	type?: 'website' | 'article';
+	/** Si se pasa, agrega JSON-LD de tipo Article (blog, reseñas, tutoriales, recursos). */
+	article?: ArticleData;
 }
 
-const { title, description = 'Portal de rol: blog, reseñas, tutoriales y recursos para GMs y jugadores.' } = Astro.props;
+const {
+	title,
+	description = 'Portal de rol: blog, reseñas, tutoriales y recursos para GMs y jugadores.',
+	image,
+	type = 'website',
+	article,
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = image ? new URL(image, Astro.site) : undefined;
+
+const jsonLd = article && {
+	'@context': 'https://schema.org',
+	'@type': 'Article',
+	headline: title,
+	description,
+	datePublished: article.datePublished.toISOString(),
+	...(article.dateModified && { dateModified: article.dateModified.toISOString() }),
+	...(article.authorName && { author: { '@type': 'Person', name: article.authorName } }),
+	...(ogImageURL && { image: ogImageURL.toString() }),
+	publisher: { '@type': 'Organization', name: 'Rol in the Shell', url: 'https://rolintheshell.com' },
+	mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalURL.toString() },
+};
 ---
 
 <!doctype html>
@@ -19,7 +52,25 @@ const { title, description = 'Portal de rol: blog, reseñas, tutoriales y recurs
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalURL} />
 		<title>{title} · Rol in the Shell</title>
+
+		<meta property="og:type" content={type} />
+		<meta property="og:site_name" content="Rol in the Shell" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonicalURL} />
+		<meta property="og:locale" content="es_AR" />
+		{ogImageURL && <meta property="og:image" content={ogImageURL} />}
+
+		<meta name="twitter:card" content={ogImageURL ? 'summary_large_image' : 'summary'} />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		{ogImageURL && <meta name="twitter:image" content={ogImageURL} />}
+		<meta name="twitter:site" content="@rol_inthe_shell" />
+
+		{jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+
 		<script is:inline>
 			// Corre antes del primer paint para evitar el flash de tema incorrecto.
 			const stored = localStorage.getItem('rits-theme');

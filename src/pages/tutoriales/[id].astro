@@ -20,7 +20,13 @@ const { tutorial } = Astro.props;
 const { Content } = await render(tutorial);
 ---
 
-<Layout title={tutorial.data.title} description={tutorial.data.description}>
+<Layout
+	title={tutorial.data.title}
+	description={tutorial.data.description}
+	image={tutorial.data.cover}
+	type="article"
+	article={{ datePublished: tutorial.data.date }}
+>
 	<article class="mx-auto max-w-3xl px-4 py-12">
 		<span class={tagPillClass}>{tutorialCategoriaLabels[tutorial.data.categoria]}</span>
 		<h1 class="mt-2 text-3xl">{tutorial.data.title}</h1>
@@ -28,7 +34,7 @@ const { Content } = await render(tutorial);
 
 		{
 			tutorial.data.cover && (
-				<img src={tutorial.data.cover} alt="" class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
+				<img src={tutorial.data.cover} alt={tutorial.data.title} class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
 			)
 		}
 

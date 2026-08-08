@@ -15,7 +15,7 @@ const { recurso } = Astro.props;
 			recurso.data.cover && (
 				<img
 					src={recurso.data.cover}
-					alt=""
+					alt={recurso.data.title}
 					class="-mx-4 -mt-4 mb-1 aspect-video w-[calc(100%+32px)] rounded-t-md object-cover"
 				/>
 			)
