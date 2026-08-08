@@ -1,52 +1,35 @@
 ---
-// No usado por ahora: Nocturne (el design system sincronizado desde Claude
-// Design) todavía solo tiene tema oscuro. El sitio corre 100% en ese tema
-// (ver Layout.astro) hasta que exista una variante clara para alternar.
+import { Icon } from 'astro-icon/components';
+// La lógica de aplicar el tema guardado al cargar vive en Layout.astro
+// (script inline, corre antes del primer paint para evitar el flash).
 ---
 
-<button
-	id="theme-toggle"
-	type="button"
-	aria-label="Cambiar entre modo claro y oscuro"
-	class="rounded-md p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
->
-	<svg
-		id="theme-toggle-icon-light"
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		class="hidden h-5 w-5 dark:block"
-	>
-		<circle cx="12" cy="12" r="4" />
-		<path
-			d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-		/>
-	</svg>
-	<svg
-		id="theme-toggle-icon-dark"
-		xmlns="http://www.w3.org/2000/svg"
-		viewBox="0 0 24 24"
-		fill="none"
-		stroke="currentColor"
-		stroke-width="2"
-		class="block h-5 w-5 dark:hidden"
-	>
-		<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-	</svg>
+<button id="theme-toggle" type="button" class="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">
+	<Icon name="ph:moon" is:inline id="theme-toggle-icon-dark" class="h-[18px] w-[18px]" aria-hidden="true" />
+	<Icon name="ph:sun" is:inline id="theme-toggle-icon-light" style="display: none" class="h-[18px] w-[18px]" aria-hidden="true" />
 </button>
 
 <script>
-	const STORAGE_KEY = 'theme';
+	const STORAGE_KEY = 'rits-theme';
+	const root = document.documentElement;
+	const button = document.getElementById('theme-toggle')!;
+	const iconDark = document.getElementById('theme-toggle-icon-dark')!;
+	const iconLight = document.getElementById('theme-toggle-icon-light')!;
 
-	function applyTheme(theme: 'light' | 'dark') {
-		document.documentElement.classList.toggle('dark', theme === 'dark');
-		localStorage.setItem(STORAGE_KEY, theme);
+	// Se usa style.display (no la clase `hidden`) porque `.theme-toggle svg {
+	// display: block }` en global.css tiene más especificidad que `.hidden` y
+	// la pisaría, dejando los dos íconos visibles siempre.
+	function applyIcon(theme: 'light' | 'dark') {
+		iconDark.style.display = theme === 'light' ? 'none' : '';
+		iconLight.style.display = theme === 'light' ? '' : 'none';
 	}
 
-	document.getElementById('theme-toggle')?.addEventListener('click', () => {
-		const isDark = document.documentElement.classList.contains('dark');
-		applyTheme(isDark ? 'light' : 'dark');
+	applyIcon(root.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+
+	button.addEventListener('click', () => {
+		const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+		root.setAttribute('data-theme', next);
+		localStorage.setItem(STORAGE_KEY, next);
+		applyIcon(next);
 	});
 </script>

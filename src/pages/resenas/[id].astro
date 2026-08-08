@@ -32,20 +32,20 @@ const { Content } = await render(resena);
 
 		<div class="mt-8 grid gap-4 sm:grid-cols-2">
 			<div class="card">
-				<h2 class="card-title">Pros</h2>
-				<ul class="mt-1 list-inside list-disc text-sm text-muted">
+				<h2 class="card-title text-green-500">Pros</h2>
+				<ul class="mt-1 list-inside list-disc text-sm text-muted marker:text-green-500">
 					{resena.data.pros.map((pro) => <li>{pro}</li>)}
 				</ul>
 			</div>
 			<div class="card">
-				<h2 class="card-title">Contras</h2>
-				<ul class="mt-1 list-inside list-disc text-sm text-muted">
+				<h2 class="card-title text-red-500">Contras</h2>
+				<ul class="mt-1 list-inside list-disc text-sm text-muted marker:text-red-500">
 					{resena.data.contras.map((contra) => <li>{contra}</li>)}
 				</ul>
 			</div>
 		</div>
 
-		<div class="prose prose-invert prose-justify mt-8 max-w-none prose-a:text-accent">
+		<div class="prose prose-justify mt-8 max-w-none prose-a:text-accent">
 			<Content />
 		</div>
 

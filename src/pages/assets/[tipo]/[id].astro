@@ -30,7 +30,13 @@ const { Content } = await render(asset);
 
 		{asset.data.description && <p class="mt-2 text-muted">{asset.data.description}</p>}
 
-		<div class="prose prose-invert prose-justify mt-8 max-w-none prose-a:text-accent">
+		{
+			asset.data.cover && (
+				<img src={asset.data.cover} alt="" class="mt-6 aspect-video w-full rounded-md object-cover shadow-md" />
+			)
+		}
+
+		<div class="prose prose-justify mt-8 max-w-none prose-a:text-accent">
 			<Content />
 		</div>
 

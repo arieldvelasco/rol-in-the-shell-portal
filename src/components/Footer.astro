@@ -1,7 +1,32 @@
 ---
+import { Icon } from 'astro-icon/components';
+
+const socials = [
+	{ name: 'X', href: 'https://x.com/rol_inthe_shell', icon: 'simple-icons:x' },
+	{ name: 'Instagram', href: 'https://www.instagram.com/rol_inthe_shell/', icon: 'simple-icons:instagram' },
+	{ name: 'YouTube', href: 'https://www.youtube.com/@rolintheshell', icon: 'simple-icons:youtube' },
+	{ name: 'Twitch', href: 'https://www.twitch.tv/rol_in_the_shell', icon: 'simple-icons:twitch' },
+];
 ---
 
 <footer class="mx-auto max-w-5xl px-4">
 	<hr class="hr" />
-	<p class="pb-6 text-sm text-muted">Rol in the Shell — portal de contenido de rol en español.</p>
+	<div class="flex flex-col gap-4 pb-6 sm:flex-row sm:items-center sm:justify-between">
+		<p class="text-sm text-muted">Rol in the Shell — portal de contenido de rol en español.</p>
+		<div class="flex items-center gap-2">
+			{
+				socials.map((social) => (
+					<a
+						href={social.href}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label={social.name}
+						class="btn btn-secondary btn-icon"
+					>
+						<Icon name={social.icon} is:inline class="h-4 w-4" aria-hidden="true" />
+					</a>
+				))
+			}
+		</div>
+	</div>
 </footer>

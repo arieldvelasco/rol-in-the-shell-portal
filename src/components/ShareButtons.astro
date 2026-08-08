@@ -10,14 +10,14 @@ const { title } = Astro.props;
 
 <div data-share data-share-title={title}>
 	<button type="button" data-share-open aria-label="Compartir" class="btn btn-secondary btn-icon">
-		<Icon name="ph:share-network" class="h-4 w-4" aria-hidden="true" />
+		<Icon name="ph:share-network" is:inline class="h-4 w-4" aria-hidden="true" />
 	</button>
 
 	<dialog data-share-modal data-nc-dialog class="m-auto">
 		<div class="flex items-center justify-between">
 			<h2 class="dialog-title">Compartir</h2>
 			<button type="button" data-share-close aria-label="Cerrar" class="btn btn-ghost btn-icon">
-				<Icon name="ph:x" class="h-4 w-4" aria-hidden="true" />
+				<Icon name="ph:x" is:inline class="h-4 w-4" aria-hidden="true" />
 			</button>
 		</div>
 
@@ -29,7 +29,7 @@ const { title } = Astro.props;
 				aria-label="Compartir en WhatsApp"
 				class="btn btn-secondary btn-icon"
 			>
-				<Icon name="simple-icons:whatsapp" class="h-4 w-4" aria-hidden="true" />
+				<Icon name="simple-icons:whatsapp" is:inline class="h-4 w-4" aria-hidden="true" />
 			</a>
 			<a
 				data-share-link="x"
@@ -38,7 +38,7 @@ const { title } = Astro.props;
 				aria-label="Compartir en X"
 				class="btn btn-secondary btn-icon"
 			>
-				<Icon name="simple-icons:x" class="h-4 w-4" aria-hidden="true" />
+				<Icon name="simple-icons:x" is:inline class="h-4 w-4" aria-hidden="true" />
 			</a>
 			<a
 				data-share-link="facebook"
@@ -47,7 +47,7 @@ const { title } = Astro.props;
 				aria-label="Compartir en Facebook"
 				class="btn btn-secondary btn-icon"
 			>
-				<Icon name="simple-icons:facebook" class="h-4 w-4" aria-hidden="true" />
+				<Icon name="simple-icons:facebook" is:inline class="h-4 w-4" aria-hidden="true" />
 			</a>
 			<button
 				type="button"
@@ -56,15 +56,15 @@ const { title } = Astro.props;
 				title="Instagram no permite compartir un link directo: copia el enlace y abre Instagram para pegarlo en tu historia o DM"
 				class="btn btn-secondary btn-icon"
 			>
-				<Icon name="simple-icons:instagram" class="h-4 w-4" aria-hidden="true" />
+				<Icon name="simple-icons:instagram" is:inline class="h-4 w-4" aria-hidden="true" />
 			</button>
 		</div>
 
 		<div class="flex items-center gap-2">
 			<input data-share-url-input type="text" readonly class="input" />
 			<button type="button" data-share-copy aria-label="Copiar enlace" class="btn btn-secondary btn-icon flex-shrink-0">
-				<Icon name="ph:link-simple" data-copy-icon-default class="h-4 w-4" aria-hidden="true" />
-				<Icon name="ph:check" data-copy-icon-success class="hidden h-4 w-4" aria-hidden="true" />
+				<Icon name="ph:link-simple" is:inline data-copy-icon-default class="h-4 w-4" aria-hidden="true" />
+				<Icon name="ph:check" is:inline data-copy-icon-success style="display: none" class="h-4 w-4" aria-hidden="true" />
 			</button>
 		</div>
 	</dialog>
@@ -127,14 +127,17 @@ const { title } = Astro.props;
 		const copyIconSuccess = copyButton.querySelector<HTMLElement>('[data-copy-icon-success]')!;
 		const copyDefaultLabel = copyButton.getAttribute('aria-label')!;
 
+		// Se usa style.display (no la clase `hidden`) porque `.btn svg { display:
+		// block }` en global.css tiene más especificidad que `.hidden` y la
+		// pisaría, dejando los dos íconos visibles siempre.
 		copyButton.addEventListener('click', async () => {
 			const copied = await copyUrl();
-			copyIconDefault.classList.toggle('hidden', copied);
-			copyIconSuccess.classList.toggle('hidden', !copied);
+			copyIconDefault.style.display = copied ? 'none' : '';
+			copyIconSuccess.style.display = copied ? '' : 'none';
 			copyButton.setAttribute('aria-label', copied ? '¡Copiado!' : 'No se pudo copiar');
 			setTimeout(() => {
-				copyIconDefault.classList.remove('hidden');
-				copyIconSuccess.classList.add('hidden');
+				copyIconDefault.style.display = '';
+				copyIconSuccess.style.display = 'none';
 				copyButton.setAttribute('aria-label', copyDefaultLabel);
 			}, 1200);
 		});

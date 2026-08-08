@@ -11,7 +11,7 @@ const { entries } = Astro.props;
 
 <aside data-top-liked class="card">
 	<h2 class="card-title">Más populares</h2>
-	<template data-icon-thumb-up><Icon name="ph:thumbs-up-fill" class="h-3.5 w-3.5" aria-hidden="true" /></template>
+	<template data-icon-thumb-up><Icon name="ph:thumbs-up-fill" is:inline class="h-3.5 w-3.5" aria-hidden="true" /></template>
 	<ul data-top-liked-list class="mt-2 space-y-1">
 		<li class="text-sm text-muted">Cargando...</li>
 	</ul>

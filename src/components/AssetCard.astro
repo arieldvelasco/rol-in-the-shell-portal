@@ -11,6 +11,15 @@ const { asset } = Astro.props;
 
 <li data-sistema={asset.data.sistema}>
 	<a href={`/assets/${asset.data.tipo}/${asset.id}`} class="card shadow-sm transition hover:shadow-md">
+		{
+			asset.data.cover && (
+				<img
+					src={asset.data.cover}
+					alt=""
+					class="-mx-4 -mt-4 mb-1 aspect-video w-[calc(100%+32px)] rounded-t-md object-cover"
+				/>
+			)
+		}
 		<div class="flex justify-end">
 			<span class={tagPillClass}>{asset.data.sistema}</span>
 		</div>

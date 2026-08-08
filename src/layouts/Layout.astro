@@ -20,6 +20,13 @@ const { title, description = 'Portal de rol: blog, reseñas y assets para GMs y 
 		<meta name="generator" content={Astro.generator} />
 		<meta name="description" content={description} />
 		<title>{title} · Rol in the Shell</title>
+		<script is:inline>
+			// Corre antes del primer paint para evitar el flash de tema incorrecto.
+			const stored = localStorage.getItem('rits-theme');
+			if (stored === 'light' || stored === 'dark') {
+				document.documentElement.setAttribute('data-theme', stored);
+			}
+		</script>
 	</head>
 	<body class="flex min-h-screen flex-col">
 		<Navbar />

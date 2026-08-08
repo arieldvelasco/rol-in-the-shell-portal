@@ -11,11 +11,11 @@ const { contentType, contentSlug } = Astro.props;
 
 <div data-reactions data-content-type={contentType} data-content-slug={contentSlug} class="inline-flex items-center gap-2">
 	<button type="button" data-reaction-kind="like" aria-pressed="false" class="btn btn-secondary">
-		<Icon name="ph:thumbs-up" class="h-4 w-4" aria-hidden="true" />
+		<Icon name="ph:thumbs-up" is:inline class="h-4 w-4" aria-hidden="true" />
 		<span data-reaction-count="like">0</span>
 	</button>
 	<button type="button" data-reaction-kind="dislike" aria-pressed="false" class="btn btn-secondary">
-		<Icon name="ph:thumbs-down" class="h-4 w-4" aria-hidden="true" />
+		<Icon name="ph:thumbs-down" is:inline class="h-4 w-4" aria-hidden="true" />
 		<span data-reaction-count="dislike">0</span>
 	</button>
 </div>
@@ -23,6 +23,7 @@ const { contentType, contentSlug } = Astro.props;
 <script>
 	import { supabase } from '../lib/supabase';
 	import { getFingerprint } from '../lib/fingerprint';
+	import { formatReactionCount } from '../lib/format-count';
 
 	document.querySelectorAll<HTMLElement>('[data-reactions]').forEach(async (container) => {
 		const contentType = container.dataset.contentType!;
@@ -46,7 +47,7 @@ const { contentType, contentSlug } = Astro.props;
 
 			buttons.forEach((button) => {
 				const kind = button.dataset.reactionKind as 'like' | 'dislike';
-				container.querySelector(`[data-reaction-count="${kind}"]`)!.textContent = String(counts[kind]);
+				container.querySelector(`[data-reaction-count="${kind}"]`)!.textContent = formatReactionCount(counts[kind]);
 				const isActive = ownReaction === kind;
 				button.setAttribute('aria-pressed', String(isActive));
 				button.classList.toggle('btn-primary', isActive);
